@@ -1,0 +1,114 @@
+import time
+from gpiozero import PWMOutputDevice, Button
+import random  # For simulating distance sensor
+from lcd import LCD  # Optional: Use a library for LCD display
+
+# --------------------------
+# Hardware Pins
+# --------------------------
+motor_pwm = PWMOutputDevice(9)  # Motor control pin (PWM)
+increase_btn = Button(2)
+decrease_btn = Button(3)
+cruise_btns = [Button(5), Button(6), Button(7), Button(8)]
+obstacle_switch = Button(12)
+
+# --------------------------
+# Variables
+# --------------------------
+speed_val = 60          # Current speed
+cruise_limit = 100      # Default cruise speed
+distance = 100          # Distance from obstacle in cm
+ultrasonic_stop = 0
+
+# --------------------------
+# LCD Simulation (Optional)
+# --------------------------
+# lcd = LCD()  # If using physical LCD
+
+# --------------------------
+# Functions
+# --------------------------
+def increase_speed():
+    global speed_val
+    speed_val += 20
+    if speed_val > 255:
+        speed_val = 255
+    motor_pwm.value = speed_val / 255.0
+    print(f"Speed increased: {speed_val}")
+
+def decrease_speed():
+    global speed_val
+    speed_val -= 20
+    if speed_val < 60:
+        speed_val = 60
+    motor_pwm.value = speed_val / 255.0
+    print(f"Speed decreased: {speed_val}")
+
+def capture_cruise():
+    global cruise_limit, speed_val
+    if cruise_btns[0].is_pressed:
+        cruise_limit = 100
+    elif cruise_btns[1].is_pressed:
+        cruise_limit = 140
+    elif cruise_btns[2].is_pressed:
+        cruise_limit = 180
+    elif cruise_btns[3].is_pressed:
+        cruise_limit = 220
+
+    if speed_val > cruise_limit:
+        speed_val -= 2
+        motor_pwm.value = speed_val / 255.0
+
+def read_distance():
+    # Simulate distance measurement
+    return random.randint(5, 50)
+
+def obstacle_control():
+    global speed_val, ultrasonic_stop
+    if obstacle_switch.is_pressed:
+        distance = read_distance()
+        if distance <= 5:
+            speed_val = 60
+            ultrasonic_stop = 1
+        elif distance <= 15:
+            speed_val = 100
+            ultrasonic_stop = 2
+        elif distance <= 25:
+            speed_val = 120
+            ultrasonic_stop = 3
+        elif distance <= 35:
+            speed_val = 140
+            ultrasonic_stop = 4
+        else:
+            speed_val = cruise_limit
+            ultrasonic_stop = 0
+
+        motor_pwm.value = speed_val / 255.0
+        print(f"Obstacle detected! Distance: {distance}cm, Speed adjusted: {speed_val}")
+
+def display_status():
+    distance = read_distance()
+    print(f"Speed: {speed_val}, Cruise Limit: {cruise_limit}, Distance: {distance}cm")
+    # lcd.set_cursor(0,0)
+    # lcd.print(f"Speed:{speed_val}")
+    # lcd.set_cursor(0,1)
+    # lcd.print(f"Dist:{distance}cm")
+
+# --------------------------
+# Button Event Bindings
+# --------------------------
+increase_btn.when_pressed = increase_speed
+decrease_btn.when_pressed = decrease_speed
+
+# --------------------------
+# Main Loop
+# --------------------------
+try:
+    while True:
+        capture_cruise()
+        obstacle_control()
+        display_status()
+        time.sleep(0.2)
+
+except KeyboardInterrupt:
+    print("Exiting Program")

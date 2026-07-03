@@ -1,6 +1,6 @@
 # IoT-Based Cruise Control System
 
-[![Python](https://img.shields.io/badge/Python-3.10-blue)](https://www.python.org/)
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://www.oracle.com/java/)
 [![Arduino](https://img.shields.io/badge/Arduino-IDE-orange)](https://www.arduino.cc/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
